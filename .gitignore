@@ -1,0 +1,28 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+.uv
+
+# Media files
+*.jpg
+*.png
+*.jpeg
+*.mp4
+*.avi
+
+# weights
+*.pt
+*.pth
+*.onnx
+*.weights
+*.h5
+*.pkl
+
+.env
