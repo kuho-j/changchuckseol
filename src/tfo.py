@@ -10,6 +10,7 @@ sensor = start_TFO(...)
 
 import time
 import board
+import busio
 from microcontroller import Pin
 from digitalio import DigitalInOut
 from adafruit_vl53l0x import VL53L0X
@@ -19,7 +20,7 @@ def start_TFO(
     xshut_pin_1 : Pin | None = None
     ) -> VL53L0X | tuple[VL53L0X, VL53L0X]:
 
-    i2c = board.I2C()
+    i2c = busio.I2C(board.SCL, board.SDA)
 
     # if there is one sensor
     if xshut_pin_1 is None:
