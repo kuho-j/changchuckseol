@@ -11,21 +11,15 @@ from os import PathLike
 from pathlib import Path
 from typing import Any
 
+import cv2
 import numpy as np
+from picamera2 import Picamera2
 
 ImageProcessor = Callable[[np.ndarray], Any]
 
 
 def _create_picamera(camera_num: int) -> Any:
-    """Create Picamera2 lazily so this module can be imported off the Pi."""
-    try:
-        from picamera2 import Picamera2
-    except ImportError as error:
-        raise RuntimeError(
-            "Picamera2를 찾을 수 없습니다. Raspberry Pi OS에서 실행하거나 "
-            "Picamera2를 설치하세요."
-        ) from error
-
+    """Create a Picamera2 instance for the selected camera."""
     return Picamera2(camera_num)
 
 
@@ -167,11 +161,6 @@ def save_image(
     create_parent: bool = True,
 ) -> Path:
     """Save an RGB image array to disk and return the saved path."""
-    try:
-        import cv2
-    except ImportError as error:
-        raise RuntimeError("opencv-python을 설치해야 이미지를 저장할 수 있습니다.") from error
-
     save_path = Path(path)
     if create_parent:
         save_path.parent.mkdir(parents=True, exist_ok=True)

@@ -1,4 +1,14 @@
-from src.capture import capture_still_to_file
+import time
+from src.tfo import start_TFO
 
 if __name__ == '__main__':
-    capture_still_to_file('capture/test_picture_1.jpg')
+    sensor = start_TFO()
+    
+    try:
+        while True:
+            distance = sensor.range
+            print(f'distance : {distance}mm')
+            time.sleep(0.5)
+
+    except KeyboardInterrupt:
+        print('quit')
