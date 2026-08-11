@@ -20,7 +20,7 @@ from torchvision.models import MobileNet_V3_Small_Weights, mobilenet_v3_small
 
 
 IMAGE_SIZE = 224
-OPSET_VERSION = 17
+OPSET_VERSION = 18
 
 
 class MobileNetV3SmallEmbedding(nn.Module):
