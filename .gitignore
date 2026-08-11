@@ -21,6 +21,7 @@ wheels/
 *.pt
 *.pth
 *.onnx
+*.onnx.data
 *.weights
 *.h5
 *.pkl
