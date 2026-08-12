@@ -2,10 +2,10 @@
 tfo 센서 테스트
 '''
 import time
-from src.tfo import start_TFO
+from tof import start_TOF
 
 if __name__ == '__main__':
-    sensor = start_TFO()
+    sensor = start_TOF()
     
     try:
         while True:

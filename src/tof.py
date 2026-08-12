@@ -4,8 +4,8 @@ TFO 센서 VL53L0를 위한 파일
 
 사용 예시
 
-sensor_1, sensor_2 = start_TFO(..., ...)
-sensor = start_TFO(...)
+sensor_1, sensor_2 = start_TOF(..., ...)
+sensor = start_TOF(...)
 '''
 
 import time
@@ -15,7 +15,7 @@ from microcontroller import Pin
 from digitalio import DigitalInOut
 from adafruit_vl53l0x import VL53L0X
 
-def start_TFO(
+def start_TOF(
     xshut_pin_0 : Pin | None = None,
     xshut_pin_1 : Pin | None = None
     ) -> VL53L0X | tuple[VL53L0X, VL53L0X]:
