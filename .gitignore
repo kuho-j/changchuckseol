@@ -27,6 +27,6 @@ wheels/
 *.pkl
 
 # Database
-.db
+*.db
 
-.env
+*.env

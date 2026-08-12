@@ -12,9 +12,10 @@ if TYPE_CHECKING:
     from adafruit_vl53l0x import VL53L0X
     from microcontroller import Pin
 
-MOTOR_FORWARD_PIN = 4
-MOTOR_BACKWARD_PIN = 5
+MOTOR_FORWARD_PIN = 0
+MOTOR_BACKWARD_PIN = 1
 
+# 센서 하나가 동작하지 않는 관계로 TOF 센서는 하나만 사용할 예정
 TOF_START_XSHUT_PIN : Pin = board.D21
 TOF_FINISH_XSHUT_PIN : Pin = board.D20
 TOF_DETECT_DISTANCE_THRESHOLD = 100 # 가까이 있다고 인식하는 거리
@@ -52,6 +53,8 @@ if __name__ == '__main__':
         backward=MOTOR_BACKWARD_PIN
         )
     '''
-    sensor_start, sensor_finish = start_TOF(TOF_START_XSHUT_PIN, TOF_FINISH_XSHUT_PIN)
+
+    # sensor_start, sensor_finish = start_TOF(TOF_START_XSHUT_PIN, TOF_FINISH_XSHUT_PIN)
+    sensor_start = start_TOF()
 
     test_tof()

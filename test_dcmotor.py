@@ -20,7 +20,8 @@ def stop():
     in2.off()
 
 try:
-    forward()
+    while True:
+        forward()
 except KeyboardInterrupt:
     stop()
     print("\n프로그램 종료")
