@@ -41,7 +41,8 @@ class StillCapture:
             return
 
         camera = _create_picamera(self.camera_num)
-        main_config: dict[str, Any] = {"format": "RGB888"}
+        # Picamera2's BGR888 format yields an RGB NumPy array.
+        main_config: dict[str, Any] = {"format": "BGR888"}
         if self.size is not None:
             main_config["size"] = self.size
 
@@ -93,7 +94,8 @@ class VideoCapture:
         camera = _create_picamera(self.camera_num)
         camera.configure(
             camera.create_video_configuration(
-                main={"format": "RGB888", "size": self.size}
+                # Picamera2's BGR888 format yields an RGB NumPy array.
+                main={"format": "BGR888", "size": self.size}
             )
         )
         camera.start()
