@@ -18,59 +18,9 @@ from pathlib import Path
 import numpy as np
 
 from garment_db import GarmentDB, VALID_CATEGORIES
+from src.process import EmbeddingProcessor
 
 DEFAULT_MODEL = Path("models/mobilenetv3_small_embedding.onnx")
-IMAGENET_MEAN = np.array((0.485, 0.456, 0.406), dtype=np.float32)
-IMAGENET_STD = np.array((0.229, 0.224, 0.225), dtype=np.float32)
-
-
-def preprocess_mobilenet(image_rgb: np.ndarray) -> np.ndarray:
-    """Apply the ImageNet MobileNetV3 resize, center-crop, and normalization."""
-    try:
-        import cv2
-    except ImportError as exc:
-        raise RuntimeError("OpenCV가 필요합니다. requirements.txt를 설치해 주세요.") from exc
-
-    if image_rgb.ndim != 3 or image_rgb.shape[2] != 3:
-        raise ValueError("카메라 이미지는 (height, width, 3) RGB 형식이어야 합니다.")
-
-    height, width = image_rgb.shape[:2]
-    if height == 0 or width == 0:
-        raise ValueError("카메라 이미지가 비어 있습니다.")
-
-    # torchvision ImageNet weights: Resize(shorter_side=256), CenterCrop(224).
-    scale = 256 / min(height, width)
-    resized_width = round(width * scale)
-    resized_height = round(height * scale)
-    resized = cv2.resize(
-        image_rgb,
-        (resized_width, resized_height),
-        interpolation=cv2.INTER_CUBIC,
-    )
-    top = (resized_height - 224) // 2
-    left = (resized_width - 224) // 2
-    cropped = resized[top : top + 224, left : left + 224]
-
-    normalized = cropped.astype(np.float32) / 255.0
-    normalized = (normalized - IMAGENET_MEAN) / IMAGENET_STD
-    return np.ascontiguousarray(normalized.transpose(2, 0, 1)[None, ...])
-
-
-def create_embedding(model_path: Path, image_rgb: np.ndarray) -> np.ndarray:
-    """Run one RGB image through the ONNX embedding model."""
-    try:
-        import onnxruntime as ort
-    except ImportError as exc:
-        raise RuntimeError("onnxruntime이 필요합니다. requirements.txt를 설치해 주세요.") from exc
-
-    if not model_path.is_file():
-        raise FileNotFoundError(f"ONNX 모델을 찾을 수 없습니다: {model_path}")
-
-    session = ort.InferenceSession(str(model_path), providers=["CPUExecutionProvider"])
-    input_name = session.get_inputs()[0].name
-    output = session.run(None, {input_name: preprocess_mobilenet(image_rgb)})[0]
-    return np.asarray(output, dtype=np.float32).reshape(-1)
-
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="카메라 이미지의 의류 임베딩을 DB에 저장")
@@ -125,6 +75,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
+    processor = EmbeddingProcessor(args.model)
 
     # picamera2는 Raspberry Pi의 system Python에만 있을 수 있으므로 여기서 import한다.
     from src.capture import capture_still, save_image
@@ -134,7 +85,7 @@ def main() -> None:
         saved_image = save_image(image_rgb, args.image_save)
         print(f"캡처 이미지 저장: {saved_image}")
 
-    embedding = create_embedding(args.model, image_rgb)
+    embedding = processor.create_embedding(image_rgb)
     if args.embedding_save:
         args.embedding_save.parent.mkdir(parents=True, exist_ok=True)
         np.save(args.embedding_save, embedding)
