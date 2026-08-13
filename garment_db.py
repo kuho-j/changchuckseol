@@ -1,5 +1,53 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""의류 이름·분류·임베딩을 SQLite에 저장하고 유사 의류를 찾는 도구.
+
+명령줄 사용법
+------------
+기본 DB 파일은 현재 작업 디렉터리의 ``garments.db``이며, 다른 경로는 모든
+명령 앞에 ``--db 경로``를 지정한다. 벡터는 1차원 숫자 배열을 담은 ``.npy`` 또는
+UTF-8 JSON 배열 파일이어야 한다. 저장 및 검색 시 벡터는 L2 정규화되므로 유사도는
+코사인 유사도이다. 검색 대상과 질의 벡터의 차원이 다르면 해당 임베딩은 제외된다.
+
+    # 1. 의류 등록: category는 underwear, light, dark 중 하나
+    python garment_db.py add-garment --name "흰 티셔츠" --category light
+
+    # 2. 등록한 의류(id=1)에 임베딩 추가
+    python garment_db.py add-embedding --garment-id 1 --vector shirt.npy
+    python garment_db.py add-embedding --garment-id 1 --vector shirt.json
+
+    # 3. 의류와 각 의류의 임베딩 개수 목록 조회
+    python garment_db.py list
+
+    # 4. 유사 의류 검색 (기본 상위 5개, --threshold로 최소 유사도 적용)
+    python garment_db.py search --vector query.npy
+    python garment_db.py search --vector query.json --top-k 3 --threshold 0.8
+
+    # 5. 가장 유사한 등록 의류 식별 (기본 임계값 0.85, 미달 시 '미등록 의류')
+    python garment_db.py identify --vector query.npy
+    python garment_db.py identify --vector query.npy --threshold 0.9
+
+    # 6. 의류 삭제 (연결된 임베딩도 함께 삭제)
+    python garment_db.py delete-garment --id 1
+
+파이썬 API 사용법
+------------------
+    from garment_db import GarmentDB, load_vector_file
+
+    db = GarmentDB("garments.db")
+    garment_id = db.add_garment("흰 티셔츠", "light")
+    embedding_id = db.add_embedding(garment_id, [0.1, 0.2, 0.3])
+    garments = db.list_garments()
+    matches = db.find_similar([0.1, 0.2, 0.3], top_k=5, threshold=0.8)
+    match = db.identify([0.1, 0.2, 0.3], threshold=0.85)
+    db.delete_embedding(embedding_id)
+    db.delete_garment(garment_id)
+
+``add_garment``와 ``add_embedding``은 새 ID를 반환하고, ``delete_garment``와
+``delete_embedding``은 삭제 성공 여부를 반환한다. ``identify``는 조건을 만족하는
+결과가 없으면 ``None``을 반환한다. ``load_vector_file``로 .npy/.json 벡터 파일을
+직접 읽을 수도 있다.
+"""
 
 import argparse
 import json
