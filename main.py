@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 from gpiozero import Motor, Servo
 import board
 from pathlib import Path
-from keyboard import wait
 
 from src.tof import start_TOF
 from src.process import EmbeddingProcessor
@@ -37,9 +36,9 @@ DB = Path('garments.db')
 
 THRESHOLD = 0.7
 
-CATEGORY = {1 : '유색 외출복',
-            2 : '무색 외출복',
-            3 : '내복'}
+CATEGORY = {1 : 'dark',
+            2 : 'light',
+            3 : 'underwear'}
 
 def tof_detect(tof : VL53L0X):
     '''
@@ -90,7 +89,7 @@ def main() -> None:
     motor = Motor(
         forward=MOTOR_FORWARD_PIN,
         backward=MOTOR_BACKWARD_PIN,
-        pwm=True
+        pwm=False
         )
 
     # sensor_start, sensor_finish = start_TOF(TOF_START_XSHUT_PIN, TOF_FINISH_XSHUT_PIN)
@@ -104,10 +103,12 @@ def main() -> None:
     
     try:
         while True:
-            # 스페이스 바가 눌릴 때까지 기다리기
-            wait('space')
+            # 아무 입력 기다리기
+            input()
+            print('start!')
 
-            motor.forward(MOTOR_SPEED)
+
+            motor.forward(1)
             tof_detect(sensor_finish)
             motor.stop()
 
@@ -126,18 +127,18 @@ def main() -> None:
                 print('새 의류를 등록하시겠습니까? [Y/N] ')
                 match input():
                     case 'Y' | 'y':
-                        name = input('의류 이름을 입력해 주십시오 >>\n')
+                        name = input('의류 이름을 입력해 주십시오 >>')
                         category = CATEGORY[int(
-                            input('''어느 것으로 분류할 것인지 입력해 주십시오
-                                유색 외출복 : 1, 무색 외출복 : 2, 내복 : 3
-                                >>'''))]
+                            input('어느 것으로 분류할 것인지 입력해 주십시오'
+                                'dark : 1, light : 2, underwear : 3'
+                                '>>'))]
                         
                         _add_garment_to_db(name, category, embedding, db)
                         
                     case _:
-                        print('''새 의류를 등록하지 않겠습니다.
-                            임시로 유색 외복에 분류합니다.''')
-                        category = '유색 외복'
+                        print('새 의류를 등록하지 않겠습니다.'
+                              '임시로 dark에 분류합니다.')
+                        category = 'dark'
                         name = '등록되지 않은 의류'
                 
             else:
@@ -147,11 +148,11 @@ def main() -> None:
             print(f'{name}: {category}로 분류합니다.')
             
             match category:
-                case '유색 외복':
+                case 'dark':
                     servo.max()
-                case '무색 외복':
+                case 'light':
                     servo.mid()
-                case '내복':
+                case 'underwear':
                     servo.min()
             
 

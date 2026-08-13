@@ -2,8 +2,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from pathlib import Path
 import numpy as np
+import cv2
 if TYPE_CHECKING:
-    import cv2
     import onnxruntime as ort
 
 IMAGENET_MEAN = np.array((0.485, 0.456, 0.406), dtype=np.float32)
