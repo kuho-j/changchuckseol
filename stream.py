@@ -98,7 +98,11 @@ img{{max-width:100vw;max-height:100vh;display:block;margin:auto}}</style></head>
                 pass  # The browser closed or reloaded the page.
 
         def log_message(self, format: str, *args: object) -> None:
-            print(f"{self.client_address[0]} - {format % args}")
+            # HTTPS/TLS bytes sent to this HTTP-only server can otherwise be
+            # displayed as garbled terminal characters in a 400 error log.
+            message = format % args
+            safe_message = message.encode("unicode_escape").decode("ascii")
+            print(f"{self.client_address[0]} - {safe_message}")
 
     return StreamHandler
 
