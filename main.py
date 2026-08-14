@@ -17,8 +17,8 @@ if TYPE_CHECKING:
     from microcontroller import Pin
     import numpy as np
 
-MOTOR_FORWARD_PIN = 0
-MOTOR_BACKWARD_PIN = 1
+MOTOR_FORWARD_PIN = 22
+MOTOR_BACKWARD_PIN = 27
 MOTOR_SPEED = 1
 
 # 센서 하나가 동작하지 않는 관계로 TOF 센서는 하나만 사용할 예정
@@ -26,7 +26,7 @@ MOTOR_SPEED = 1
 #TOF_FINISH_XSHUT_PIN : Pin = board.D20
 TOF_DETECT_DISTANCE_THRESHOLD = 100 # 가까이 있다고 인식하는 거리
 TOF_DETECT_INTERVAL = 0.1 # 센서 주기
-TOF_DETECT_TIME_THRESHOLD = 0.5 # 몇 초 동안 가까이 있어야 할지
+TOF_DETECT_TIME_THRESHOLD = 0.2 # 몇 초 동안 가까이 있어야 할지
 
 SERVO_PIN = 18
 
@@ -50,6 +50,22 @@ def tof_detect(tof : VL53L0X):
         if distance < TOF_DETECT_DISTANCE_THRESHOLD:
             for _ in range(int(TOF_DETECT_TIME_THRESHOLD // TOF_DETECT_INTERVAL)):
                 if distance > TOF_DETECT_DISTANCE_THRESHOLD:
+                    continue
+                sleep(TOF_DETECT_INTERVAL)
+
+            return 1
+        sleep(TOF_DETECT_INTERVAL)
+
+def tof_detect_nothing(tof : VL53L0X):
+    '''
+    tof에 물체가 없어지면 1을 리턴
+    '''
+
+    while True:
+        distance = tof.range
+        if distance > TOF_DETECT_DISTANCE_THRESHOLD:
+            for _ in range(int(TOF_DETECT_TIME_THRESHOLD // TOF_DETECT_INTERVAL)):
+                if distance < TOF_DETECT_DISTANCE_THRESHOLD:
                     continue
                 sleep(TOF_DETECT_INTERVAL)
 
@@ -100,6 +116,7 @@ def main() -> None:
     servo = Servo(SERVO_PIN,
                   min_pulse_width=0.5 / 1000,
                   max_pulse_width=2.5 / 1000)
+    servo.mid()
     
     try:
         while True:
@@ -108,7 +125,7 @@ def main() -> None:
             print('start!')
 
 
-            motor.forward(1)
+            motor.forward()
             tof_detect(sensor_finish)
             motor.stop()
 
@@ -154,10 +171,21 @@ def main() -> None:
                     servo.mid()
                 case 'underwear':
                     servo.min()
+
+            motor.forward()
+            tof_detect_nothing(sensor_finish)
+            motor.stop()
+
             
 
     except KeyboardInterrupt:
         print('\nEnd the program.')
+
+    finally:
+        motor.stop()
+        motor.close()
+        servo.close()
+
 
 if __name__ == '__main__':
     main()
