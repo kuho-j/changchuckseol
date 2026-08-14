@@ -1,4 +1,6 @@
 from __future__ import annotations
+import argparse
+from datetime import datetime
 from time import sleep
 from typing import TYPE_CHECKING
 from gpiozero import Motor, Servo
@@ -7,7 +9,7 @@ from pathlib import Path
 
 from src.tof import start_TOF
 from src.process import EmbeddingProcessor
-from src.capture import capture_still
+from src.capture import capture_still, save_image
 from garment_db import GarmentDB
 
 
@@ -33,6 +35,7 @@ SERVO_PIN = 18
 DEFAULT_MODEL = Path('models/mobilenetv3_small_embedding.onnx')
 
 DB = Path('garments.db')
+CAPTURE_DIR = Path('captures')
 
 THRESHOLD = 0.7
 
@@ -97,9 +100,34 @@ def _add_garment_to_db(name : str,
 
     embedding_id = db.add_embedding(garment_id, embedding)
     print(f"임베딩 저장 완료: garment_id={garment_id}, embedding_id={embedding_id}, dimension={embedding.size}")
-   
+
+
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--save-image',
+        action='store_true',
+        default=False,
+        help='캡처한 이미지를 captures/에 저장합니다.',
+    )
+    return parser.parse_args()
+
+
+def _capture_path(name: str) -> Path:
+    invalid_filename_chars = '<>:"/\\|?*'
+    safe_name = ''.join(
+        '_' if char in invalid_filename_chars else char
+        for char in name.strip()
+    ).strip()
+    if not safe_name:
+        safe_name = '의류'
+
+    current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
+    return CAPTURE_DIR / f'{safe_name}_{current_time}.jpg'
+
 
 def main() -> None:
+    args = _parse_args()
     model = EmbeddingProcessor(DEFAULT_MODEL)
 
     motor = Motor(
@@ -163,6 +191,10 @@ def main() -> None:
                 category = best['category']
                 name = best['name']
             print(f'{name}: {category}로 분류합니다.')
+
+            if args.save_image:
+                saved_path = save_image(img_rgb, _capture_path(name))
+                print(f'이미지 저장 완료: {saved_path}')
             
             match category:
                 case 'dark':
